@@ -1,9 +1,11 @@
-package com.phlox.asql;
+package com.fedir.example;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
+
+import com.phlox.asql.ASQL;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -73,11 +75,11 @@ public class ASQLTest {
 
     @Test
     public void save() throws Exception {
-        Entity e = new Entity("test");
+        ASQLTest.Entity e = new ASQLTest.Entity("test");
         long id = asql.save(e);
         assertTrue(id > 0);
         assertEquals(id, e.id);
-        Entity e2 = asql.find(Entity.class, "id = ?", new String[]{Long.toString(id)});
+        ASQLTest.Entity e2 = asql.find(ASQLTest.Entity.class, "id = ?", new String[]{Long.toString(id)});
         assertNotNull(e2);
         assertEquals(e.title, e2.title);
     }
