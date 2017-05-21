@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.lang.ref.WeakReference;
@@ -280,6 +281,30 @@ public class ASQL {
         });
     }
 
+    public void clear(Class type) throws SQLException{
+        ClassInfo classInfo = models.getClassInfo(type);
+        String query = "DELETE FROM " + classInfo.tableName;
+        exec(query);
+    }
+
+    public void clear(Class type, final ExecCallback callback) {
+        ClassInfo classInfo = models.getClassInfo(type);
+        String query = "DELETE FROM " + classInfo.tableName;
+        exec(query, callback);
+    }
+
+    public <T> List<T> loadAll(Class<T> type) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+        ClassInfo classInfo = models.getClassInfo(type);
+        String query = "SELECT * FROM " + classInfo.tableName;
+        return queryAll(type, query, null);
+    }
+
+    public <T> void loadAll(final Class<T> type, final ResultCallback<List<T>> callback) {
+        ClassInfo classInfo = models.getClassInfo(type);
+        String query = "SELECT * FROM " + classInfo.tableName;
+        queryAll(type, "", null, callback);
+    }
+
     public <T> List<T> queryAll(Class<T> type, String query, String[] selectionArgs) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         Cursor cursor;
         try {
@@ -397,10 +422,18 @@ public class ASQL {
     }
 
     public void exec(String sql) throws SQLException {
-        openHelper.getWritableDatabase().execSQL(sql);
+        exec(sql, null);
+    }
+
+    public void execAsync(final String sql, @NonNull final ExecCallback callback) {
+        execAsync(sql, null, callback);
     }
 
     public void exec(String sql, Object values) throws SQLException {
+        if (values == null) {
+            openHelper.getWritableDatabase().execSQL(sql);
+            return;
+        }
         SQLiteStatement statement = null;
         try {
             statement = openHelper.getWritableDatabase().compileStatement(models.formatSQL(sql, values));
@@ -415,7 +448,7 @@ public class ASQL {
         }
     }
 
-    public void exec(final String sql, final Object values, final ExecCallback callback) {
+    public void execAsync(final String sql, final Object values, @NonNull final ExecCallback callback) {
         executor.execute(new Runnable() {
             @Override
             public void run() {

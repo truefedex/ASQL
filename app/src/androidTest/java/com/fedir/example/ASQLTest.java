@@ -14,6 +14,8 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.List;
+
 import static org.junit.Assert.*;
 
 /**
@@ -60,7 +62,7 @@ public class ASQLTest {
 
     @After
     public void tearDown() throws Exception {
-        asql.exec("DELETE FROM entity");
+        asql.clear(Entity.class);
     }
 
     @Test
@@ -75,12 +77,21 @@ public class ASQLTest {
 
     @Test
     public void save() throws Exception {
-        ASQLTest.Entity e = new ASQLTest.Entity("test");
+        Entity e = new Entity("test");
         long id = asql.save(e);
         assertTrue(id > 0);
         assertEquals(id, e.id);
-        ASQLTest.Entity e2 = asql.find(ASQLTest.Entity.class, "id = ?", new String[]{Long.toString(id)});
+        Entity e2 = asql.find(Entity.class, "id = ?", new String[]{Long.toString(id)});
         assertNotNull(e2);
         assertEquals(e.title, e2.title);
+    }
+
+    @Test
+    public void loadAll() throws Exception {
+        asql.save(new Entity("test"));
+        asql.save(new Entity("test2"));
+        List<Entity> result = asql.loadAll(Entity.class);
+        assertNotNull(result);
+        assertEquals(result.size(), 2);
     }
 }
