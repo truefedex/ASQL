@@ -130,15 +130,9 @@ public class ASQL {
         return openHelper.getWritableDatabase();
     }
 
-    public long count(Class type) {
-        Cursor cursor;
-        try {
-            String query = "SELECT count(*) FROM " + models.getClassInfo(type).tableName;
-            cursor = openHelper.getReadableDatabase().rawQuery(query, null);
-        } catch (SQLException e) {
-            Log.e(TAG, "SQL Error:", e);
-            throw e;
-        }
+    public long count(Class type) throws SQLException {
+        String query = "SELECT count(*) FROM " + models.getClassInfo(type).tableName;
+        Cursor cursor = openHelper.getReadableDatabase().rawQuery(query, null);
 
         try {
             cursor.moveToNext();
@@ -148,18 +142,35 @@ public class ASQL {
         }
     }
 
-    public int delete(Object entity) {
+    public void count(final Class type, final ResultCallback<Long> callback) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                Long result = null;
+                Exception exception = null;
+                try {
+                    result = count(type);
+                } catch (Exception e) {
+                    exception = e;
+                }
+                final Long _result = result;
+                final Exception _exception = exception;
+                mainThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.onDone(_result, _exception);
+                    }
+                });
+            }
+        });
+    }
+
+    public int delete(Object entity) throws SQLException{
         ClassInfo classInfo = models.getClassInfo(entity.getClass());
         String value = models.getFieldValueAsString(classInfo.primaryKey.field, entity);
         String query = String.format("DELETE FROM %s WHERE %s=%s", classInfo.tableName,
                 classInfo.primaryKey.name, value);
-        SQLiteStatement statement = null;
-        try {
-            statement = openHelper.getWritableDatabase().compileStatement(query);
-        } catch (SQLException e) {
-            Log.e(TAG, "SQL Error:", e);
-            throw e;
-        }
+        SQLiteStatement statement = openHelper.getWritableDatabase().compileStatement(query);
         try {
             return statement.executeUpdateDelete();
         } finally {
