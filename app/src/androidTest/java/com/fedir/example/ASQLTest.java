@@ -12,7 +12,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 
 import java.util.List;
 
@@ -44,8 +43,7 @@ public class ASQLTest {
         appContext.deleteDatabase(TEST_DB);
         ASQL.initDefaultInstance(TEST_DB, 1, new ASQL.BaseCallback() {
             @Override
-            public void onCreate(ASQL asql) {
-                SQLiteDatabase db = asql.getDB();
+            public void onCreate(ASQL asql, SQLiteDatabase db) {
                 db.execSQL("CREATE TABLE entity ("
                         + "ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
                         + "TITLE TEXT"

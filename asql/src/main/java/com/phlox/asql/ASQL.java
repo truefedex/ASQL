@@ -33,7 +33,6 @@ public class ASQL {
     private DatabaseHelper openHelper;
     private Callback callback;
     private ModelsInfoProcessor models = new ModelsInfoProcessor();
-    private SQLiteDatabase _cachedDatabase;
     private ExecutorService executor;
     private Handler mainThreadHandler;
 
@@ -47,8 +46,8 @@ public class ASQL {
     }
 
     public interface Callback {
-        void onCreate(ASQL asql);
-        void onUpgrade(ASQL asql, int oldVersion, int newVersion);
+        void onCreate(ASQL asql, SQLiteDatabase db);
+        void onUpgrade(ASQL asql, SQLiteDatabase db, int oldVersion, int newVersion);
         void onCorruption(ASQL asql);
         ExecutorService getExecutorService();
     }
@@ -71,22 +70,18 @@ public class ASQL {
 
     public static abstract class BaseCallback implements Callback {
         @Override
-        public void onCreate(ASQL asql) {}
+        public void onCreate(ASQL asql, SQLiteDatabase db) {}
         @Override
-        public void onUpgrade(ASQL asql, int oldVersion, int newVersion) {}
+        public void onUpgrade(ASQL asql, SQLiteDatabase db, int oldVersion, int newVersion) {}
         @Override
         public void onCorruption(ASQL asql) {}
         @Override
         public ExecutorService getExecutorService() {
-            return Executors.newCachedThreadPool();
+            return Executors.newSingleThreadExecutor();
         }
     }
 
-    private ASQL() {
-
-    }
-
-    private void init(Context context, String databaseName, int databaseVersion, Callback callback) {
+    public ASQL(Context context, String databaseName, int databaseVersion, Callback callback) {
         this.context = context;
         this.databaseName = databaseName;
         this.databaseVersion = databaseVersion;
@@ -110,9 +105,8 @@ public class ASQL {
             if (defaultInitParams == null) {
                 throw new IllegalStateException("Ypu must first call ASQL.initDefaultInstance method");
             }
-            asql = new ASQL();
+            asql = new ASQL(applicationContext, defaultInitParams.databaseName, defaultInitParams.databaseVersion, defaultInitParams.callback);
             defaultInstance = new WeakReference<>(asql);
-            asql.init(applicationContext, defaultInitParams.databaseName, defaultInitParams.databaseVersion, defaultInitParams.callback);
         } else {
             asql = defaultInstance.get();
         }
@@ -124,9 +118,6 @@ public class ASQL {
     }
 
     public SQLiteDatabase getDB() {
-        if (_cachedDatabase != null) {
-            return _cachedDatabase;
-        }
         return openHelper.getWritableDatabase();
     }
 
@@ -496,18 +487,14 @@ public class ASQL {
         @Override
         public void onCreate(SQLiteDatabase db) {
             if (callback != null) {
-                _cachedDatabase = db;
-                callback.onCreate(ASQL.this);
-                _cachedDatabase = null;
+                callback.onCreate(ASQL.this, db);
             }
         }
 
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             if (callback != null) {
-                _cachedDatabase = db;
-                callback.onUpgrade(ASQL.this, oldVersion, newVersion);
-                _cachedDatabase = null;
+                callback.onUpgrade(ASQL.this, db, oldVersion, newVersion);
             }
         }
 
