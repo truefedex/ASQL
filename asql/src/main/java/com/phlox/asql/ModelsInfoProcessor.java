@@ -66,6 +66,10 @@ public class ModelsInfoProcessor extends Object{
                 field.setInt(newInstance, cursor.getInt(i));
             else if (field.getType().equals(short.class))
                 field.setShort(newInstance, cursor.getShort(i));
+            else if (field.getType().equals(byte.class))
+                field.setByte(newInstance, (byte) cursor.getShort(i));
+            else if (field.getType().equals(char.class))
+                field.setChar(newInstance, (char) cursor.getInt(i));
             else if (field.getType().equals(long.class))
                 field.setLong(newInstance, cursor.getLong(i));
             else if (field.getType().equals(float.class))
@@ -139,7 +143,7 @@ public class ModelsInfoProcessor extends Object{
                 }
                 sb.append(Character.toLowerCase(c));
             } else {
-                sb.append(c);
+                sb.append(Character.toLowerCase(c));
             }
         }
         return sb.toString();
@@ -171,8 +175,11 @@ public class ModelsInfoProcessor extends Object{
                     return NULL_SQL_VALUE_AS_STRING;
                 }
                 return DatabaseUtils.sqlEscapeString((String) val);
-            } else if (field.getType().equals(long.class) || field.getType().equals(int.class) || field.getType().equals(short.class))
+            } else if (field.getType().equals(long.class) || field.getType().equals(int.class) ||
+                    field.getType().equals(short.class) || field.getType().equals(byte.class))
                 return Long.toString(field.getLong(obj));
+            else if (field.getType().equals(char.class))
+                return Integer.toString(field.getChar(obj));
             else if (field.getType().equals(double.class) || field.getType().equals(float.class))
                 return Double.toString(field.getDouble(obj));
             else if (field.getType().equals(boolean.class))
@@ -192,8 +199,11 @@ public class ModelsInfoProcessor extends Object{
                     statement.bindString(index, (String) val);
                 }
                 return;
-            } else if (field.getType().equals(long.class) || field.getType().equals(int.class) || field.getType().equals(short.class)) {
+            } else if (field.getType().equals(long.class) || field.getType().equals(int.class) || field.getType().equals(short.class) || field.getType().equals(byte.class)) {
                 statement.bindLong(index, field.getLong(obj));
+                return;
+            } else if (field.getType().equals(char.class)) {
+                statement.bindLong(index, field.getChar(obj));
                 return;
             } else if (field.getType().equals(double.class) || field.getType().equals(float.class)) {
                 statement.bindDouble(index, field.getDouble(obj));
