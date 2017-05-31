@@ -27,7 +27,7 @@ public class ASQLTest {
 
     public static class Entity {
         public int id;
-        public String title;
+        private String title;
 
         public Entity() {
         }

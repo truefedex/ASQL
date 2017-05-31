@@ -62,7 +62,12 @@ public class ModelsInfoProcessor extends Object{
             if (column == null) continue;
             Field field = column.field;
             if (field == null) continue;
-            if (field.getType().equals(int.class))
+            if (!field.isAccessible()) {
+                field.setAccessible(true);
+            }
+            if (field.getType().equals(String.class))
+                field.set(newInstance, cursor.getString(i));
+            else if (field.getType().equals(int.class))
                 field.setInt(newInstance, cursor.getInt(i));
             else if (field.getType().equals(short.class))
                 field.setShort(newInstance, cursor.getShort(i));
@@ -76,8 +81,6 @@ public class ModelsInfoProcessor extends Object{
                 field.setFloat(newInstance, cursor.getFloat(i));
             else if (field.getType().equals(double.class))
                 field.setDouble(newInstance, cursor.getDouble(i));
-            else if (field.getType().equals(String.class))
-                field.set(newInstance, cursor.getString(i));
             else if (field.getType().equals(boolean.class))
                 field.setBoolean(newInstance, cursor.getInt(i) != 0);
         }
@@ -169,6 +172,9 @@ public class ModelsInfoProcessor extends Object{
 
     public static String getFieldValueAsString(Field field, Object obj) {
         try {
+            if (!field.isAccessible()) {
+                field.setAccessible(true);
+            }
             if (field.getType().equals(String.class)) {
                 Object val = field.get(obj);
                 if (val == null) {
@@ -191,6 +197,9 @@ public class ModelsInfoProcessor extends Object{
 
     public static void bindFieldValueToPreparedStatement(Field field, Object obj, int index, SQLiteStatement statement) {
         try {
+            if (!field.isAccessible()) {
+                field.setAccessible(true);
+            }
             if (field.getType().equals(String.class)) {
                 Object val = field.get(obj);
                 if (val == null) {
