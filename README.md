@@ -71,6 +71,14 @@ db.save(note);
 note = db.find(Note.class, "title == ?", new String[]{query});
 db.delete(note);
 
+//or async analogous:
+db.loadAll(Note.class, new ASQL.ResultCallback<List<Note>>() {
+    @Override
+    public void onDone(List<Note> result, Exception exception) {
+	//check error and do some stuff with result
+    }
+});
+
 //but you still able to do something like...
 db.getDB().execSQL("SELECT count(*) FROM note");
 //and other low-level stuff
