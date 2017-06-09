@@ -52,6 +52,7 @@ public class Note {
     int id;
     String title;
     String body;
+    @DBColumn(name = "some_other_name")
     long creationTime;
     long modificationTime;
     @DBIgnore
