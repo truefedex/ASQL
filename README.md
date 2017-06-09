@@ -67,7 +67,7 @@ Currently only primitive datatypes supported as fields.
 db = ASQL.getDefault(this);
 List<Note> allNotes = db.loadAll(Note.class);
 Note note = new Note();
-db.save(note);
+db.save(note);//ASQL assume that "id" field is used as primary key (can be changed by @DBColumn(primaryKey = true) annotation)
 note = db.find(Note.class, "title == ?", new String[]{query});
 db.delete(note);
 
