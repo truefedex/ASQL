@@ -7,7 +7,7 @@ Simple wrapper for SQLite API on Android.
 
 #### Usage
 
-#####Step 1. Add the JitPack repository to your build file
+##### Step 1. Add the JitPack repository to your build file
 
 Add it in your root build.gradle at the end of repositories:
 ```gradle
@@ -19,7 +19,7 @@ allprojects {
 }
 ```
 
-#####Step 2. Add the dependency
+##### Step 2. Add the dependency
 
 ```groovy
 dependencies {
@@ -27,7 +27,7 @@ dependencies {
 }
 ```
 
-#####Initialize (recommended in your application class onCreate):
+##### Initialize (recommended in your application class onCreate):
 ```java
 ASQL.initDefaultInstance("main.db", 1, new ASQL.BaseCallback() {
             @Override
@@ -45,7 +45,7 @@ ASQL.initDefaultInstance("main.db", 1, new ASQL.BaseCallback() {
 });
 ```
 
-#####Design your models:
+##### Design your models:
 ```java
 @DBTable(name = "note", markMode = MarkMode.ALL_EXCEPT_IGNORED)
 public class Note {
@@ -60,7 +60,7 @@ public class Note {
 ```
 Currently only primitive datatypes supported as fields.
 
-#####...And use simple api:
+##### ...And use simple api:
 
 ```java
 db = ASQL.getDefault(this);
