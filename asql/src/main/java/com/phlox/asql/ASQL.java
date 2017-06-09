@@ -82,7 +82,7 @@ public class ASQL {
     }
 
     public ASQL(Context context, String databaseName, int databaseVersion, Callback callback) {
-        this.context = context;
+        this.context = context.getApplicationContext();
         this.databaseName = databaseName;
         this.databaseVersion = databaseVersion;
         this.callback = callback;

@@ -1,1 +1,1 @@
-include ':app', ':asql'
+include ':example', ':asql'
