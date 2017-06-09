@@ -30,18 +30,18 @@ dependencies {
 ##### Initialize (recommended in your application class onCreate):
 ```java
 ASQL.initDefaultInstance("main.db", 1, new ASQL.BaseCallback() {
-            @Override
-            public void onCreate(ASQL asql, SQLiteDatabase db) {
-	            //currently automatic table generation not supported
-                db.execSQL("CREATE TABLE note ("
-                        + "id INTEGER PRIMARY KEY NOT NULL,"
-                        + "title TEXT,"
-                        + "body TEXT,"
-                        + "creationTime INTEGER,"
-                        + "modificationTime INTEGER"
-                        + ");");
-                db.execSQL("CREATE INDEX note_title_idx ON note(title);");
-            }
+    @Override
+    public void onCreate(ASQL asql, SQLiteDatabase db) {
+	    //currently automatic table generation not supported
+	db.execSQL("CREATE TABLE note ("
+		+ "id INTEGER PRIMARY KEY NOT NULL,"
+		+ "title TEXT,"
+		+ "body TEXT,"
+		+ "creationTime INTEGER,"
+		+ "modificationTime INTEGER"
+		+ ");");
+	db.execSQL("CREATE INDEX note_title_idx ON note(title);");
+    }
 });
 ```
 
@@ -67,7 +67,10 @@ Currently only primitive datatypes supported as fields.
 db = ASQL.getDefault(this);
 List<Note> allNotes = db.loadAll(Note.class);
 Note note = new Note();
-db.save(note);//ASQL assume that "id" field is used as primary key (can be changed by @DBColumn(primaryKey = true) annotation)
+//ASQL assume that "id" field is used as primary key (can be changed by @DBColumn(primaryKey = true) annotation)
+//if id==0 object will be inserted in DB, othervise - updated
+db.save(note);
+Log.d(TAG, "Note with id = " + note.id + " inserted to db");
 note = db.find(Note.class, "title == ?", new String[]{query});
 db.delete(note);
 
