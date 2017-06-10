@@ -89,3 +89,8 @@ db.getDB().execSQL("SELECT count(*) FROM note");
 //and other low-level stuff
 ```
 
+Do not forget to prevent ProGuard obfuscation of your models (this library using reflection to instantiate POJOs):
+
+```
+-keepclasseswithmembers class com.yourapp.models.package.** { *; }
+```
