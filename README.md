@@ -1,5 +1,6 @@
 # ASQL
 Simple wrapper for SQLite API on Android.
+Although this library already fully functional I not recommend to use it for production especially on large projects. It is currently in pre-alpha state, developed slowly and breaking changes appears time to time.
 
 #### Features
  - CRUD operations
