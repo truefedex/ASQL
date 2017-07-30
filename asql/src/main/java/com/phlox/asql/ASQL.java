@@ -9,12 +9,12 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -156,12 +156,61 @@ public class ASQL {
         });
     }
 
+    public int delete(Collection items) throws SQLException{
+        if (items == null || items.isEmpty()) return 0;
+        ClassInfo classInfo = models.getClassInfo(items.iterator().next().getClass());
+        StringBuffer sb = new StringBuffer(items.size()*2);
+        for (int i = 0; i < items.size(); i++) {
+            sb.append('?');
+            if (i != items.size() - 1) {
+                sb.append(',');
+            }
+        }
+        String valuesPlaceholdersCommaSeparated = sb.toString();
+        String query = String.format("DELETE FROM %s WHERE %s IN (%s)", classInfo.tableName,
+                classInfo.primaryKey.name, valuesPlaceholdersCommaSeparated);
+        SQLiteStatement statement = openHelper.getWritableDatabase().compileStatement(query);
+        int i = 1;
+        for (Object item : items) {
+            ModelsInfoProcessor.bindFieldValueToPreparedStatement(classInfo.primaryKey.field, item, i, statement);
+            i++;
+        }
+        try {
+            return statement.executeUpdateDelete();
+        } finally {
+            statement.close();
+        }
+    }
+
+    public void delete(final Collection items, final ResultCallback<Integer> callback) {
+        executor.execute(new Runnable() {
+            @Override
+            public void run() {
+                Integer result = null;
+                Exception exception = null;
+                try {
+                    result = delete(items);
+                } catch (Exception e) {
+                    exception = e;
+                }
+                final Integer _result = result;
+                final Exception _exception = exception;
+                mainThreadHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        callback.onDone(_result, _exception);
+                    }
+                });
+            }
+        });
+    }
+
     public int delete(Object entity) throws SQLException{
         ClassInfo classInfo = models.getClassInfo(entity.getClass());
-        String value = models.getFieldValueAsString(classInfo.primaryKey.field, entity);
-        String query = String.format("DELETE FROM %s WHERE %s=%s", classInfo.tableName,
-                classInfo.primaryKey.name, value);
+        String query = String.format("DELETE FROM %s WHERE %s=?", classInfo.tableName,
+                classInfo.primaryKey.name);
         SQLiteStatement statement = openHelper.getWritableDatabase().compileStatement(query);
+        ModelsInfoProcessor.bindFieldValueToPreparedStatement(classInfo.primaryKey.field, entity, 1, statement);
         try {
             return statement.executeUpdateDelete();
         } finally {
@@ -192,7 +241,7 @@ public class ASQL {
         });
     }
 
-    public <T> T find(Class<T> type, String whereClause, String[] selectionArgs) throws IllegalAccessException, InstantiationException {
+    public <T> T find(Class<T> type, String whereClause, String... selectionArgs) throws IllegalAccessException, InstantiationException {
         ClassInfo classInfo = models.getClassInfo(type);
         Cursor cursor;
         try {
@@ -214,7 +263,7 @@ public class ASQL {
         return result;
     }
 
-    public <T> void find(final Class<T> type, final String whereClause, final String[] selectionArgs, final ResultCallback<T> callback) {
+    public <T> void find(final Class<T> type, final String whereClause, final ResultCallback<T> callback, final String... selectionArgs) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -240,6 +289,9 @@ public class ASQL {
     public long save(Object entity) throws IllegalAccessException {
         ClassInfo classInfo = models.getClassInfo(entity.getClass());
         Field keyField = classInfo.primaryKey.field;
+        if (!keyField.isAccessible()) {
+            keyField.setAccessible(true);
+        }
         if ((keyField.getType().equals(long.class) || keyField.getType().equals(int.class) || keyField.getType().equals(short.class)) &&
                 keyField.getLong(entity) == 0) {
             //look like we attempt to save row with autoincrement key
@@ -298,16 +350,16 @@ public class ASQL {
     public <T> List<T> loadAll(Class<T> type) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         ClassInfo classInfo = models.getClassInfo(type);
         String query = "SELECT * FROM " + classInfo.tableName;
-        return queryAll(type, query, null);
+        return queryAll(type, query);
     }
 
     public <T> void loadAll(final Class<T> type, final ResultCallback<List<T>> callback) {
         ClassInfo classInfo = models.getClassInfo(type);
         String query = "SELECT * FROM " + classInfo.tableName;
-        queryAll(type, "", null, callback);
+        queryAll(type, "", callback);
     }
 
-    public <T> List<T> queryAll(Class<T> type, String query, String[] selectionArgs) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
+    public <T> List<T> queryAll(Class<T> type, String query, String... selectionArgs) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
         Cursor cursor;
         try {
             cursor = openHelper.getReadableDatabase().rawQuery(query, selectionArgs);
@@ -324,7 +376,7 @@ public class ASQL {
         return result;
     }
 
-    public <T> void queryAll(final Class<T> type, final String query, final String[] selectionArgs, final ResultCallback<List<T>> callback) {
+    public <T> void queryAll(final Class<T> type, final String query, final ResultCallback<List<T>> callback, final String... selectionArgs) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
@@ -427,7 +479,7 @@ public class ASQL {
         exec(sql, null);
     }
 
-    public void execAsync(final String sql, @NonNull final ExecCallback callback) {
+    public void execAsync(final String sql, final ExecCallback callback) {
         execAsync(sql, null, callback);
     }
 
@@ -450,7 +502,7 @@ public class ASQL {
         }
     }
 
-    public void execAsync(final String sql, final Object values, @NonNull final ExecCallback callback) {
+    public void execAsync(final String sql, final Object values, final ExecCallback callback) {
         executor.execute(new Runnable() {
             @Override
             public void run() {
