@@ -113,7 +113,7 @@ public class ASQL {
         return asql;
     }
 
-    public DatabaseHelper getOpenHelper() {
+    public SQLiteOpenHelper getOpenHelper() {
         return openHelper;
     }
 
