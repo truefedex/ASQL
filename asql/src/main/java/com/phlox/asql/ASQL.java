@@ -356,7 +356,7 @@ public class ASQL {
     public <T> void loadAll(final Class<T> type, final ResultCallback<List<T>> callback) {
         ClassInfo classInfo = models.getClassInfo(type);
         String query = "SELECT * FROM " + classInfo.tableName;
-        queryAll(type, "", callback);
+        queryAll(type, query, callback);
     }
 
     public <T> List<T> queryAll(Class<T> type, String query, String... selectionArgs) throws InvocationTargetException, NoSuchMethodException, InstantiationException, IllegalAccessException {
