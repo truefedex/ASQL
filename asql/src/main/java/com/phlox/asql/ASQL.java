@@ -288,11 +288,14 @@ public class ASQL {
 
     public long save(Object entity) throws IllegalAccessException {
         ClassInfo classInfo = models.getClassInfo(entity.getClass());
-        Field keyField = classInfo.primaryKey.field;
-        if (!keyField.isAccessible()) {
-            keyField.setAccessible(true);
+        Field keyField = null;
+        if (classInfo.primaryKey != null) {
+            keyField = classInfo.primaryKey.field;
+            if (!keyField.isAccessible()) {
+                keyField.setAccessible(true);
+            }
         }
-        if ((keyField.getType().equals(long.class) || keyField.getType().equals(int.class) || keyField.getType().equals(short.class)) &&
+        if (keyField != null && (keyField.getType().equals(long.class) || keyField.getType().equals(int.class) || keyField.getType().equals(short.class)) &&
                 keyField.getLong(entity) == 0) {
             //look like we attempt to save row with autoincrement key
             SQLiteStatement statement = classInfo.fillInsertAutoincrementPreparedStatement(this, entity);

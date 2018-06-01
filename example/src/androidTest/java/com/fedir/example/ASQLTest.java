@@ -6,6 +6,7 @@ import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
 import com.phlox.asql.ASQL;
+import com.phlox.asql.annotations.DBTable;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -38,6 +39,18 @@ public class ASQLTest {
         }
     }
 
+    @DBTable(name = "table_without_primary_key")
+    public static class IdLessEntity {
+        String field1;
+        String field2;
+        public IdLessEntity() {
+        }
+        public IdLessEntity(String field1, String field2) {
+            this.field1 = field1;
+            this.field2 = field2;
+        }
+    }
+
     @BeforeClass
     public static void init() {
         Context appContext = InstrumentationRegistry.getTargetContext();
@@ -48,6 +61,10 @@ public class ASQLTest {
                 db.execSQL("CREATE TABLE entity ("
                         + "ID INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,"
                         + "TITLE TEXT"
+                        + ");");
+                db.execSQL("CREATE TABLE table_without_primary_key ("
+                        + "field1 TEXT,"
+                        + "field2 TEXT"
                         + ");");
             }
         });
@@ -62,6 +79,7 @@ public class ASQLTest {
     @After
     public void tearDown() throws Exception {
         asql.clear(Entity.class);
+        asql.clear(IdLessEntity.class);
     }
 
     @Test
@@ -119,5 +137,16 @@ public class ASQLTest {
         assertNull(shouldBeNull);
         assertEquals(asql.delete(items), 2);
         assertEquals(asql.count(Entity.class), 0);
+    }
+
+    @Test
+    public void saveAndLoadIdLessEntity() throws Exception {
+        asql.save(new IdLessEntity("test", "test2"));
+        asql.save(new IdLessEntity("test3", "test4"));
+        assertEquals(asql.count(IdLessEntity.class), 2);
+        List<IdLessEntity> entities = asql.loadAll(IdLessEntity.class);
+        assertTrue(!entities.get(0).field2.equals(entities.get(1).field2));
+        asql.clear(IdLessEntity.class);
+        assertEquals(asql.count(IdLessEntity.class), 0);
     }
 }
